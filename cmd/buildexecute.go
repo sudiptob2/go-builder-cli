@@ -85,15 +85,24 @@ func copyDir(sourcePath, destinationPath string) {
 		destinationPath += "/" + sourceSplit[len(sourceSplit)-1]
 	}
 
-	//fmt.Println("Source folder :", sourcePath)
-	//fmt.Println("Destination  folder :", destinationPath)
+	fmt.Println("Source folder :", sourcePath)
+	fmt.Println("Destination  folder :", destinationPath)
 
 	//Do not perform copy if the source and the destination is the same
 	if isDestinationUnderSource(sourcePath, destinationPath) {
 		fmt.Println("Destination folder is under the source directory. Did not copy.")
 		return
 	}
-	err := copy.Copy(sourcePath, destinationPath)
+	opt := copy.Options{
+		Skip: func(src string) (bool, error) {
+			return strings.HasSuffix(src, "_test.go"), nil
+		},
+		OnDirExists: func(src, dest string) copy.DirExistsAction {
+			// Replace if directory exist
+			return 1
+		},
+	}
+	err := copy.Copy(sourcePath, destinationPath, opt)
 	if err != nil {
 		logrus.Error(err)
 	} else {
