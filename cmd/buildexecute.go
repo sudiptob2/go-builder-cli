@@ -28,6 +28,8 @@ import (
 	"github.com/spf13/cobra"
 )
 
+var excludeTestFlag bool
+
 // buildexecuteCmd represents the buildexecute command
 var buildexecuteCmd = &cobra.Command{
 	Use:   "buildexecute",
@@ -49,18 +51,23 @@ func init() {
 	buildexecuteCmd.PersistentFlags().StringP("copydir", "c", "", "Copies the content of the specified dirtectory")
 	buildexecuteCmd.PersistentFlags().StringP("builddir", "b", "", "Specify the destination directory")
 	buildexecuteCmd.PersistentFlags().StringP("exe", "e", "", "compile the code of the directory as a binary")
+
+	buildexecuteCmd.PersistentFlags().BoolVarP(&excludeTestFlag, "exclude-tests", "x", false, "excludes the golang test files")
 }
 
 func compileAsBin(cmd *cobra.Command, sourcePath string) {
 	sourcePath = formatPath(sourcePath)
 	binaryName, _ := cmd.Flags().GetString("exe")
+	if binaryName == "" {
+		return
+	}
 
 	if runtime.GOOS == "windows" {
 		binaryName += ".exe"
 	}
 	_, err := exec.Command("go", "build", "-o", binaryName, sourcePath).CombinedOutput()
 	if err != nil {
-		logrus.Error(err)
+		logrus.Error("No compileable go code found! ", err)
 		return
 	}
 	fmt.Println(binaryName, "created in ", sourcePath)
@@ -85,8 +92,8 @@ func copyDir(sourcePath, destinationPath string) {
 		destinationPath += "/" + sourceSplit[len(sourceSplit)-1]
 	}
 
-	fmt.Println("Source folder :", sourcePath)
-	fmt.Println("Destination  folder :", destinationPath)
+	//fmt.Println("Source folder :", sourcePath)
+	//fmt.Println("Destination  folder :", destinationPath)
 
 	//Do not perform copy if the source and the destination is the same
 	if isDestinationUnderSource(sourcePath, destinationPath) {
@@ -94,13 +101,22 @@ func copyDir(sourcePath, destinationPath string) {
 		return
 	}
 	opt := copy.Options{
-		Skip: func(src string) (bool, error) {
-			return strings.HasSuffix(src, "_test.go"), nil
-		},
 		OnDirExists: func(src, dest string) copy.DirExistsAction {
 			// Replace if directory exist
 			return 1
 		},
+	}
+	if excludeTestFlag == true {
+		opt = copy.Options{
+			// Skip the test files
+			Skip: func(src string) (bool, error) {
+				return strings.HasSuffix(src, "_test.go"), nil
+			},
+			OnDirExists: func(src, dest string) copy.DirExistsAction {
+				// Replace if directory exist
+				return 1
+			},
+		}
 	}
 	err := copy.Copy(sourcePath, destinationPath, opt)
 	if err != nil {
