@@ -40,6 +40,7 @@ Do not specify builddir. In this case files will be copied to the current workin
         go run main.go buildexecute --copydir D:\test\sudiptob2\source\.
 
 Specify builddir
+
         go run main.go buildexecute --copydir D:\test\sudiptob2\source\. --builddir D:\test\sudiptob2\dest
 
 Copy and compile
