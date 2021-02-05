@@ -55,6 +55,10 @@ func compileAsBin(cmd *cobra.Command, sourcePath string) {
 	sourcePath = formatPath(sourcePath)
 	binaryName, _ := cmd.Flags().GetString("exe")
 
+	if binaryName == "" {
+		return
+	}
+
 	if runtime.GOOS == "windows" {
 		binaryName += ".exe"
 	}
