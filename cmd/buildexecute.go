@@ -87,14 +87,15 @@ func copyDir(sourcePath, destinationPath string) {
 	// to  create a folder of same name
 	// so that otiai10/copy can copy everyting into that folder
 	// in the destination
-	// if content of the file specified we do not append
-	if sourceSplit[len(sourceSplit)-1] != "" {
+	// if content of the folder (ex folder/.) specified we do not append
+	// copy the file directly to the destination
+	if sourceSplit[len(sourceSplit)-1] != "." {
 
 		destinationPath += "/" + sourceSplit[len(sourceSplit)-1]
 	}
 
-	fmt.Println("Source folder :", sourcePath)
-	fmt.Println("Destination  folder :", destinationPath)
+	//fmt.Println("Source folder :", sourcePath)
+	//fmt.Println("Destination  folder :", destinationPath)
 
 	//Do not perform copy if the source and the destination is the same
 	if isDestinationUnderSource(sourcePath, destinationPath) {
@@ -139,6 +140,13 @@ func getSourcePath(cmd *cobra.Command) string {
 	if err != nil {
 		logrus.Error("Incorrect sopurce path", err)
 	}
+
+	// If directory content is specified we appned the "/."
+	// this was removed by the filepath.Abs function
+	if strings.HasSuffix(sourcePath, ".") {
+		absolutePath += "/."
+	}
+
 	return absolutePath
 }
 
@@ -158,6 +166,7 @@ func getDestinationPath(cmd *cobra.Command, sourcePath string) string {
 	if err != nil {
 		logrus.Error("Incorrect destination path", err)
 	}
+
 	return absolutePath
 }
 
