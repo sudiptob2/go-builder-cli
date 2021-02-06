@@ -54,7 +54,6 @@ func init() {
 func compileAsBin(cmd *cobra.Command, sourcePath string) {
 	sourcePath = formatPath(sourcePath)
 	binaryName, _ := cmd.Flags().GetString("exe")
-
 	if binaryName == "" {
 		return
 	}
@@ -64,7 +63,7 @@ func compileAsBin(cmd *cobra.Command, sourcePath string) {
 	}
 	_, err := exec.Command("go", "build", "-o", binaryName, sourcePath).CombinedOutput()
 	if err != nil {
-		logrus.Error(err)
+		logrus.Error("No compileable go code found! ", err)
 		return
 	}
 	fmt.Println(binaryName, "created in ", sourcePath)
