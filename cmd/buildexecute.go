@@ -29,6 +29,8 @@ import (
 	"github.com/spf13/cobra"
 )
 
+var excludeTestFlag bool
+
 // buildexecuteCmd represents the buildexecute command
 var buildexecuteCmd = &cobra.Command{
 	Use:   "buildexecute",
@@ -83,8 +85,9 @@ func copyDir(sourcePath, destinationPath string) {
 	// to  create a folder of same name
 	// so that otiai10/copy can copy everyting into that folder
 	// in the destination
-	// if content of the file specified we do not append
-	if sourceSplit[len(sourceSplit)-1] != "" {
+	// if content of the folder (ex folder/.) specified we do not append
+	// copy the file directly to the destination
+	if sourceSplit[len(sourceSplit)-1] != "." {
 
 		destinationPath += "/" + sourceSplit[len(sourceSplit)-1]
 	}
@@ -94,17 +97,15 @@ func copyDir(sourcePath, destinationPath string) {
 
 	//Do not perform copy if the source and the destination is the same
 	if isDestinationUnderSource(sourcePath, destinationPath) {
-		fmt.Println("Destination folder is under the source directory. Did not copy.")
+		fmt.Println("Destination folder is under/same as the source directory. Did not copy.")
 		return
 	}
-
 	opt := copy.Options{
 		OnDirExists: func(src, dest string) copy.DirExistsAction {
 			// Replace if directory exist
 			return 1
 		},
 	}
-
 	err := copy.Copy(sourcePath, destinationPath, opt)
 	if err != nil {
 		logrus.Error(err)
@@ -121,7 +122,18 @@ func getSourcePath(cmd *cobra.Command) string {
 		os.Exit(0)
 	}
 
-	return sourcePath
+	absolutePath, err := filepath.Abs(sourcePath)
+	if err != nil {
+		logrus.Error("Incorrect sopurce path", err)
+	}
+
+	// If directory content is specified we appned the "/."
+	// this was removed by the filepath.Abs function
+	if strings.HasSuffix(sourcePath, ".") {
+		absolutePath += "/."
+	}
+
+	return absolutePath
 }
 
 func getDestinationPath(cmd *cobra.Command, sourcePath string) string {
@@ -133,10 +145,15 @@ func getDestinationPath(cmd *cobra.Command, sourcePath string) string {
 	// return the current directory as destination
 	if destinationPath == "" {
 
-		return getCurrentDir()
+		destinationPath = getCurrentDir()
 	}
 
-	return destinationPath
+	absolutePath, err := filepath.Abs(destinationPath)
+	if err != nil {
+		logrus.Error("Incorrect destination path", err)
+	}
+
+	return absolutePath
 }
 
 // Checks if the destination directory is under the source directory or not
