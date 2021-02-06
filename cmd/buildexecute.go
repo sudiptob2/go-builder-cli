@@ -19,6 +19,7 @@ import (
 	"fmt"
 	"os"
 	"os/exec"
+	"path/filepath"
 	"regexp"
 	"runtime"
 	"strings"
@@ -92,8 +93,8 @@ func copyDir(sourcePath, destinationPath string) {
 		destinationPath += "/" + sourceSplit[len(sourceSplit)-1]
 	}
 
-	//fmt.Println("Source folder :", sourcePath)
-	//fmt.Println("Destination  folder :", destinationPath)
+	fmt.Println("Source folder :", sourcePath)
+	fmt.Println("Destination  folder :", destinationPath)
 
 	//Do not perform copy if the source and the destination is the same
 	if isDestinationUnderSource(sourcePath, destinationPath) {
@@ -156,26 +157,8 @@ func getDestinationPath(cmd *cobra.Command, sourcePath string) string {
 
 func isDestinationUnderSource(sourcePath, destinationPath string) bool {
 
-	sourceSplit := strings.Split(sourcePath, "/")
-	destinationSplit := strings.Split(destinationPath, "/")
-
-	// if the length of destination split is lower than source split
-	// then surely destination folder is not under the source folder
-	if len(destinationSplit) < len(sourceSplit) {
-		return false
-	}
-
-	flag := true
-	limit := len(sourceSplit)
-
-	for i := 0; i < limit; i++ {
-		if sourceSplit[i] != destinationSplit[i] {
-			flag = false
-			break
-		}
-	}
-	return flag
-
+	relpath, _ := filepath.Rel(sourcePath, destinationPath)
+	return !strings.HasPrefix(relpath, "..")
 }
 
 // Returns the path in the linux format
