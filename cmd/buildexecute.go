@@ -93,8 +93,8 @@ func copyDir(sourcePath, destinationPath string) {
 		destinationPath += "/" + sourceSplit[len(sourceSplit)-1]
 	}
 
-	fmt.Println("Source folder :", sourcePath)
-	fmt.Println("Destination  folder :", destinationPath)
+	//fmt.Println("Source folder :", sourcePath)
+	//fmt.Println("Destination  folder :", destinationPath)
 
 	//Do not perform copy if the source and the destination is the same
 	if isDestinationUnderSource(sourcePath, destinationPath) {
