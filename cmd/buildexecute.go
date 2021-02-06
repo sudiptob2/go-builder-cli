@@ -93,12 +93,12 @@ func copyDir(sourcePath, destinationPath string) {
 		destinationPath += "/" + sourceSplit[len(sourceSplit)-1]
 	}
 
-	//fmt.Println("Source folder :", sourcePath)
-	//fmt.Println("Destination  folder :", destinationPath)
+	fmt.Println("Source folder :", sourcePath)
+	fmt.Println("Destination  folder :", destinationPath)
 
 	//Do not perform copy if the source and the destination is the same
 	if isDestinationUnderSource(sourcePath, destinationPath) {
-		fmt.Println("Destination folder is under the source directory. Did not copy.")
+		fmt.Println("Destination folder is under/same as the source directory. Did not copy.")
 		return
 	}
 	opt := copy.Options{
@@ -135,7 +135,11 @@ func getSourcePath(cmd *cobra.Command) string {
 		os.Exit(0)
 	}
 
-	return sourcePath
+	absolutePath, err := filepath.Abs(sourcePath)
+	if err != nil {
+		logrus.Error("Incorrect sopurce path", err)
+	}
+	return absolutePath
 }
 
 func getDestinationPath(cmd *cobra.Command, sourcePath string) string {
@@ -147,10 +151,14 @@ func getDestinationPath(cmd *cobra.Command, sourcePath string) string {
 	// return the current directory as destination
 	if destinationPath == "" {
 
-		return getCurrentDir()
+		destinationPath = getCurrentDir()
 	}
 
-	return destinationPath
+	absolutePath, err := filepath.Abs(destinationPath)
+	if err != nil {
+		logrus.Error("Incorrect destination path", err)
+	}
+	return absolutePath
 }
 
 // Checks if the destination directory is under the source directory or not
