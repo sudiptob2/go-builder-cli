@@ -96,7 +96,15 @@ func copyDir(sourcePath, destinationPath string) {
 		fmt.Println("Destination folder is under the source directory. Did not copy.")
 		return
 	}
-	err := copy.Copy(sourcePath, destinationPath)
+
+	opt := copy.Options{
+		OnDirExists: func(src, dest string) copy.DirExistsAction {
+			// Replace if directory exist
+			return 1
+		},
+	}
+
+	err := copy.Copy(sourcePath, destinationPath, opt)
 	if err != nil {
 		logrus.Error(err)
 	} else {
