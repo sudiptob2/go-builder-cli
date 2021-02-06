@@ -52,6 +52,8 @@ func init() {
 	buildexecuteCmd.PersistentFlags().StringP("copydir", "c", "", "Copies the content of the specified dirtectory")
 	buildexecuteCmd.PersistentFlags().StringP("builddir", "b", "", "Specify the destination directory")
 	buildexecuteCmd.PersistentFlags().StringP("exe", "e", "", "compile the code of the directory as a binary")
+
+	buildexecuteCmd.PersistentFlags().BoolVarP(&excludeTestFlag, "exclude-tests", "x", false, "excludes the golang test files")
 }
 
 func compileAsBin(cmd *cobra.Command, sourcePath string) {
@@ -105,6 +107,18 @@ func copyDir(sourcePath, destinationPath string) {
 			// Replace if directory exist
 			return 1
 		},
+	}
+	if excludeTestFlag == true {
+		opt = copy.Options{
+			// Skip the test files
+			Skip: func(src string) (bool, error) {
+				return strings.HasSuffix(src, "_test.go"), nil
+			},
+			OnDirExists: func(src, dest string) copy.DirExistsAction {
+				// Replace if directory exist
+				return 1
+			},
+		}
 	}
 	err := copy.Copy(sourcePath, destinationPath, opt)
 	if err != nil {
